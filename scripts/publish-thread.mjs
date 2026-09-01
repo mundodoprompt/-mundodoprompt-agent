@@ -81,15 +81,48 @@ async function publishText(text, replyToId) {
   return published.id;
 }
 
+async function preflight() {
+  const url = new URL(`${API_BASE}/me`);
+  url.searchParams.set("fields", "id,username");
+  url.searchParams.set("access_token", token);
+  const response = await fetch(url);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.error) {
+    throw new Error(`Falha na validação do token: ${data.error?.message || response.status}`);
+  }
+}
+
+async function deletePost(id) {
+  const url = new URL(`${API_BASE}/${id}`);
+  url.searchParams.set("access_token", token);
+  const response = await fetch(url, { method: "DELETE" });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    console.error(`Não foi possível remover ${id}: ${data.error?.message || response.status}`);
+  }
+}
+
+await preflight();
+
 let previousId = initialReplyToId;
 let firstPublishedId;
+const publishedIds = [];
 
-for (const [index, part] of parts.entries()) {
-  const publishedId = await publishText(part, previousId);
-  firstPublishedId ||= publishedId;
-  previousId = publishedId;
-  console.log(`Parte ${index + 1}/${parts.length} publicada: ${publishedId}`);
-  if (index < parts.length - 1) await wait(5000);
+try {
+  for (const [index, part] of parts.entries()) {
+    const publishedId = await publishText(part, previousId);
+    publishedIds.push(publishedId);
+    firstPublishedId ||= publishedId;
+    previousId = publishedId;
+    console.log(`Parte ${index + 1}/${parts.length} publicada: ${publishedId}`);
+    if (index < parts.length - 1) await wait(5000);
+  }
+} catch (error) {
+  console.error("Falha definitiva. Removendo as partes desta tentativa para não deixar conteúdo cortado.");
+  for (const id of [...publishedIds].reverse()) {
+    await deletePost(id);
+  }
+  throw error;
 }
 
 let permalink = "";
