@@ -1,0 +1,67 @@
+name: Publicar thread
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: threads-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.issue.user.login == github.repository_owner &&
+      startsWith(github.event.issue.title, '[PUBLISH]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Publicar no Threads
+        id: publish
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        run: node scripts/publish-thread.mjs
+
+      - name: Registrar sucesso
+        if: success()
+        uses: actions/github-script@v8
+        env:
+          PERMALINK: ${{ steps.publish.outputs.permalink }}
+          ROOT_ID: ${{ steps.publish.outputs.root_id }}
+        with:
+          script: |
+            const link = process.env.PERMALINK
+              ? `\n\nLink: ${process.env.PERMALINK}`
+              : `\n\nID: ${process.env.ROOT_ID}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ Thread publicada com sucesso.${link}`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: "closed"
+            });
+
+      - name: Registrar falha
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "❌ A publicação falhou. Consulte a execução do GitHub Actions para ver o erro. A issue permaneceu aberta para nova tentativa."
+            });
