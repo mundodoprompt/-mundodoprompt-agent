@@ -58,3 +58,39 @@ Um exemplo está em `examples/thread.json`.
 ## Custos
 
 O projeto não usa OpenAI API, Claude API ou outro serviço pago de geração. A pesquisa e a criação ficam nas tarefas do ChatGPT; a publicação usa GitHub Actions e a API oficial do Threads.
+
+
+## Instagram
+
+O mesmo repositório também publica carrosséis no **@mundodoprompt** por meio da API oficial do Instagram.
+
+Fluxo:
+
+1. Uma tarefa cria uma issue cujo título começa com `[INSTAGRAM]`.
+2. O JSON é validado antes de qualquer publicação.
+3. O renderizador gera de 2 a 10 imagens JPG em 1080 × 1350.
+4. As imagens são disponibilizadas temporariamente pelo GitHub Pages.
+5. O script cria todos os itens, monta o carrossel e só então publica.
+6. Se qualquer validação ou upload falhar, nada é publicado.
+
+Secrets necessários:
+
+- `INSTAGRAM_ACCESS_TOKEN`
+- `INSTAGRAM_USER_ID`
+
+O GitHub Pages precisa estar configurado com **Source: GitHub Actions** em **Settings → Pages**.
+
+Título da issue:
+
+```
+[INSTAGRAM] Tema do carrossel
+```
+
+O corpo deve conter somente JSON válido conforme `examples/instagram-carousel.json`.
+
+Arquivos principais:
+
+- `.github/workflows/publish-instagram-carousel.yml`
+- `scripts/render-carousel.mjs`
+- `scripts/publish-instagram.mjs`
+- `examples/instagram-carousel.json`
