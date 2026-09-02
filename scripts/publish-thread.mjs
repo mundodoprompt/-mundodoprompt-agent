@@ -30,6 +30,16 @@ for (const [index, part] of parts.entries()) {
   if (typeof part !== "string" || !part.trim()) {
     throw new Error(`Parte ${index + 1} está vazia ou não é texto.`);
   }
+  const normalized = part.trim();
+  const visibleSequenceMarker =
+    /^(?:\(?\d{1,2}\s*\/\s*\d{1,2}\)?|parte\s+\d{1,2}(?:\s+de\s+\d{1,2})?)\s*[:.)—–-]?\s*/i;
+
+  if (visibleSequenceMarker.test(normalized)) {
+    throw new Error(
+      `Parte ${index + 1} começa com numeração visível. Remova marcadores como 1/9, 2/9 ou Parte 1.`,
+    );
+  }
+
   const length = [...part].length;
   if (length > 500) {
     throw new Error(`Parte ${index + 1} possui ${length} caracteres; o limite é 500.`);
