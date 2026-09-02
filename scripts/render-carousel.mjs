@@ -104,10 +104,16 @@ function baseSvg(slide, index) {
   if (bodyLines.length > 7) throw new Error(`O texto do slide ${index + 1} não cabe no layout.`);
   if (promptLines.length > 12) throw new Error(`O prompt do slide ${index + 1} não cabe no layout.`);
 
-  const titleY = isCover ? 315 : 235;
+  // Give the eyebrow room to breathe and keep the content block visually centered.
+  const titleY = isCover ? 315 : 285;
   const titleHeight = titleLines.length * (titleSize * 1.08);
-  const bodyY = titleY + titleHeight + 56;
-  const promptY = bodyY + Math.max(bodyLines.length, 1) * 46 + 75;
+  const bodySize = isCta ? 38 : isCover ? 33 : 33;
+  const bodyLineHeight = isCta ? 56 : 49;
+  const bodyHeight = Math.max(bodyLines.length, 1) * bodyLineHeight;
+  const bodyY = isCta
+    ? Math.max(titleY + titleHeight + 78, 650 - bodyHeight / 2)
+    : titleY + titleHeight + 66;
+  const promptY = bodyY + bodyHeight + 75;
   const dots = slides.map((_, dotIndex) => `<circle cx="${450 + dotIndex * 24}" cy="1272" r="6" fill="${dotIndex === index ? "#35D5FF" : "#36506E"}"/>`).join("");
   const eyebrow = escapeXml(slide.eyebrow || (isCover ? "PROMPTS PRÁTICOS" : isCta ? "PRÓXIMO PASSO" : "APLIQUE AGORA"));
 
@@ -123,10 +129,16 @@ function baseSvg(slide, index) {
     ${brandMark()}
     <text x="72" y="195" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#35D5FF" letter-spacing="3">${eyebrow}</text>
     ${textBlock(titleLines, 72, titleY, titleSize, Math.round(titleSize * 1.08), 900)}
-    ${bodyLines.length ? textBlock(bodyLines, 74, bodyY, isCover ? 31 : 29, 46, 400, "#C8D7E8") : ""}
+    ${bodyLines.length ? textBlock(bodyLines, 74, bodyY, bodySize, bodyLineHeight, 400, "#C8D7E8") : ""}
     ${slide.prompt ? `<rect x="66" y="${promptY - 54}" width="948" height="${Math.max(230, promptLines.length * 39 + 92)}" rx="30" fill="#0D2448" stroke="#24799B" stroke-width="2"/><text x="104" y="${promptY - 14}" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="800" fill="#35D5FF" letter-spacing="2">PROMPT</text>${textBlock(promptLines, 104, promptY + 34, 27, 39, 400, "#F3F8FC")}` : ""}
     ${isCover ? neuralArt() : ""}
-    ${isCta ? `<rect x="72" y="930" width="936" height="164" rx="34" fill="#35D5FF"/><text x="540" y="1000" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="900" fill="#04101F">${escapeXml(slide.cta || "SALVE E COMPARTILHE")}</text><text x="540" y="1048" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" fill="#08203B">@mundodoprompt</text>` : ""}
+    ${isCta ? `<rect x="72" y="930" width="936" height="164" rx="34" fill="#35D5FF"/>
+      <g transform="translate(254 962)" fill="none" stroke="#04101F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h34v45L20 36 3 47z"/></g>
+      <text x="310" y="998" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="900" fill="#04101F">SALVE</text>
+      <line x1="498" y1="960" x2="498" y2="1010" stroke="#0B6B86" stroke-width="2" opacity="0.55"/>
+      <g transform="translate(548 963)" fill="none" stroke="#04101F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 48 2 34 48 23 29z"/><path d="m23 29 25-27"/></g>
+      <text x="620" y="998" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="900" fill="#04101F">COMPARTILHE</text>
+      <text x="540" y="1058" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" fill="#08203B">@mundodoprompt</text>` : ""}
     <g>${dots}</g>
   </svg>`;
 }
