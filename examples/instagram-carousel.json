@@ -1,0 +1,25 @@
+{
+  "caption": "A legenda completa do carrossel, com CTA natural e até cinco hashtags relevantes.",
+  "slides": [
+    {
+      "type": "cover",
+      "eyebrow": "PROMPTS PARA TRABALHO",
+      "title": "VOCÊ ESTÁ COMEÇANDO PELA TAREFA ERRADA",
+      "body": "Um bom prompt não aumenta sua lista. Ele ajuda a decidir o que realmente merece sua atenção."
+    },
+    {
+      "type": "prompt",
+      "eyebrow": "PRIORIDADE REAL",
+      "title": "SEPARE URGÊNCIA DE IMPACTO",
+      "body": "Cole suas tarefas e deixe a IA comparar consequências antes de montar o dia.",
+      "prompt": "Analise estas tarefas por impacto, urgência real, esforço e consequência de adiar. Escolha uma prioridade principal, explique a decisão e separe o restante entre agendar, delegar e eliminar. Lista: [cole aqui]"
+    },
+    {
+      "type": "cta",
+      "eyebrow": "PRÓXIMO PASSO",
+      "title": "USE A IA PARA DECIDIR MELHOR",
+      "body": "Salve este carrossel, compartilhe com alguém que vive apagando incêndios e siga o Mundo do Prompt.",
+      "cta": "SALVE PARA USAR DEPOIS"
+    }
+  ]
+}
