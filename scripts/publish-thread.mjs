@@ -18,6 +18,10 @@ function extractJson(value) {
 const payload = JSON.parse(extractJson(body));
 const parts = payload.parts;
 const initialReplyToId = payload.reply_to_id ? String(payload.reply_to_id) : undefined;
+const pagesBaseUrl = process.env.PAGES_BASE_URL;
+const coverImageUrl = !initialReplyToId && pagesBaseUrl
+  ? new URL(`thread-covers/${event.issue.number}/cover.jpg`, pagesBaseUrl.endsWith("/") ? pagesBaseUrl : `${pagesBaseUrl}/`).href
+  : undefined;
 
 if (!Array.isArray(parts) || parts.length < 1 || parts.length > 20) {
   throw new Error('"parts" deve conter de 1 a 20 textos.');
@@ -79,16 +83,36 @@ async function api(path, params, maxAttempts = 4) {
   throw lastError;
 }
 
-async function publishText(text, replyToId) {
+async function publishPart(text, replyToId, imageUrl) {
   const creation = await api("me/threads", {
-    media_type: "TEXT",
+    media_type: imageUrl ? "IMAGE" : "TEXT",
     text: text.trim(),
+    ...(imageUrl ? { image_url: imageUrl } : {}),
     ...(replyToId ? { reply_to_id: replyToId } : {}),
   });
 
   await wait(4000);
   const published = await api("me/threads_publish", { creation_id: creation.id }, 6);
   return published.id;
+}
+
+async function preflightImage(imageUrl) {
+  if (!imageUrl) return;
+
+  let lastError;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    try {
+      const response = await fetch(imageUrl, { cache: "no-store" });
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok && contentType.startsWith("image/")) return;
+      lastError = new Error(`Capa indisponível: HTTP ${response.status}, ${contentType || "sem content-type"}`);
+    } catch (error) {
+      lastError = error;
+    }
+    await wait(attempt * 3000);
+  }
+
+  throw lastError || new Error("A capa não ficou disponível para publicação.");
 }
 
 async function preflight() {
@@ -113,6 +137,7 @@ async function deletePost(id) {
 }
 
 await preflight();
+await preflightImage(coverImageUrl);
 
 let previousId = initialReplyToId;
 let firstPublishedId;
@@ -120,7 +145,7 @@ const publishedIds = [];
 
 try {
   for (const [index, part] of parts.entries()) {
-    const publishedId = await publishText(part, previousId);
+    const publishedId = await publishPart(part, previousId, index === 0 ? coverImageUrl : undefined);
     publishedIds.push(publishedId);
     firstPublishedId ||= publishedId;
     previousId = publishedId;
