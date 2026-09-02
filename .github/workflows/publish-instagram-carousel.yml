@@ -1,0 +1,103 @@
+name: Publicar carrossel no Instagram
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: instagram-carousel-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.issue.user.login == github.repository_owner &&
+      startsWith(github.event.issue.title, '[INSTAGRAM]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar renderizador
+        run: npm install --no-save --no-package-lock sharp@0.34.4
+
+      - name: Validar e gerar carrossel
+        id: render
+        run: node scripts/render-carousel.mjs
+
+      - name: Guardar prévia para diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrossel-${{ github.event.issue.number }}
+          path: public/carousels/${{ github.event.issue.number }}
+          retention-days: 7
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Preparar publicação das imagens
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Publicar imagens temporárias
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Publicar carrossel no Instagram
+        id: instagram
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          PAGES_BASE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: node scripts/publish-instagram.mjs
+
+      - name: Registrar sucesso
+        if: success()
+        uses: actions/github-script@v8
+        env:
+          PERMALINK: ${{ steps.instagram.outputs.permalink }}
+          POST_ID: ${{ steps.instagram.outputs.post_id }}
+        with:
+          script: |
+            const destination = process.env.PERMALINK || `ID: ${process.env.POST_ID}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ Carrossel publicado integralmente no Instagram.\n\n${destination}`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: "closed"
+            });
+
+      - name: Registrar falha
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "❌ O carrossel não foi publicado. A validação ou a publicação falhou, e a issue permaneceu aberta. Nenhum carrossel parcial foi enviado ao Instagram."
+            });
