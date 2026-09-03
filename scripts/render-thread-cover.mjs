@@ -53,6 +53,7 @@ function textBlock(lines, x, y, size, lineHeight, weight, fill) {
 
 function detectScene(text) {
   const rules = [
+    ["language", /idioma|ingl[eê]s|espanhol|franc[eê]s|alem[aã]o|italiano|duolingo|conversa[cç][aã]o|pron[uú]ncia|traduz|vocabul[aá]rio/],
     ["meeting", /reuni[aã]o|ata|pauta|equipe|respons[aá]vel|decis[aã]o/],
     ["design", /canva|design|imagem|visual|foto|criativ|layout|marca/],
     ["money", /dinheiro|econom|assinatura|pre[cç]o|custo|finan[cç]|venda/],
@@ -66,6 +67,7 @@ function detectScene(text) {
 
 const scene = detectScene(allText);
 const sceneMeta = {
+  language: ["FALE PARA APRENDER", "#FFB84D", "#31D5FF"],
   meeting: ["DA CONVERSA À AÇÃO", "#31D5FF", "#755CFF"],
   design: ["DO BRIEFING À ARTE", "#FF4FD8", "#31D5FF"],
   money: ["MENOS DESPERDÍCIO", "#55E59A", "#FFD166"],
@@ -139,6 +141,29 @@ function travelScene() {
   </g>`;
 }
 
+function languageScene() {
+  return `<g transform="translate(72 720)">
+    <g transform="translate(420 70)" filter="url(#softShadow)">
+      <rect width="470" height="330" rx="34" fill="#102746" stroke="#41698A" stroke-width="4"/>
+      <rect x="38" y="42" width="168" height="92" rx="28" fill="#F8FBFF"/>
+      <path d="M72 134l28 38 18-38" fill="#F8FBFF"/>
+      <text x="122" y="101" text-anchor="middle" font-family="Arial" font-size="34" font-weight="900" fill="#102746">HELLO!</text>
+      <rect x="252" y="148" width="176" height="94" rx="28" fill="${accent}"/>
+      <path d="M365 242l-24 38-20-38" fill="${accent}"/>
+      <text x="340" y="208" text-anchor="middle" font-family="Arial" font-size="31" font-weight="900" fill="#071426">OLÁ!</text>
+      <path d="M72 286h320" stroke="#6886A4" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="118" cy="286" r="13" fill="${accent2}"/><circle cx="165" cy="286" r="22" fill="${accent}"/><circle cx="220" cy="286" r="10" fill="${accent2}"/><circle cx="266" cy="286" r="28" fill="${accent}"/><circle cx="330" cy="286" r="16" fill="${accent2}"/>
+    </g>
+    ${person(245,275,"#E57C3B")}
+    <path d="M188 215q-42-50 5-95" fill="none" stroke="${accent}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M300 215q42-50-5-95" fill="none" stroke="${accent}" stroke-width="12" stroke-linecap="round"/>
+    <path d="M175 160q70-72 140 0" fill="none" stroke="${accent}" stroke-width="14" stroke-linecap="round"/>
+    <rect x="105" y="392" width="236" height="32" rx="16" fill="#173553"/>
+    <g transform="translate(95 22) rotate(-8)"><rect width="120" height="165" rx="14" fill="#F7F0DB" stroke="${accent2}" stroke-width="4"/><circle cx="60" cy="55" r="25" fill="none" stroke="${accent2}" stroke-width="5"/><path d="M28 105h64M28 127h50" stroke="#31557A" stroke-width="7" stroke-linecap="round"/></g>
+    <g transform="translate(700 360)"><rect width="130" height="88" rx="18" fill="#F8FBFF"/><path d="M0 44h130" stroke="${accent2}" stroke-width="6"/><path d="M65 0v88" stroke="${accent}" stroke-width="6"/></g>
+  </g>`;
+}
+
 function studyScene() {
   return `<g transform="translate(72 745)"><rect x="80" y="390" width="810" height="55" rx="20" fill="#173553"/>${person(300,260,"#6F55D8")}
     <g transform="translate(390 75)" filter="url(#softShadow)"><rect width="440" height="285" rx="30" fill="#102746" stroke="#3A5E80" stroke-width="4"/><path d="M58 76q90-45 160 12v140q-72-45-160-12Zm324 0q-90-45-160 12v140q72-45 160-12Z" fill="#EAF5FF" opacity=".9"/><path d="M220 88v140" stroke="${accent}" stroke-width="6"/><circle cx="220" cy="55" r="27" fill="${accent2}"/><path d="M220 34v42M199 55h42" stroke="#FFF" stroke-width="5"/></g>
@@ -171,6 +196,7 @@ function workScene() {
 }
 
 const illustration = {
+  language: languageScene,
   meeting: meetingScene,
   design: designScene,
   money: moneyScene,
