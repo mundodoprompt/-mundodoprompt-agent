@@ -88,9 +88,20 @@ Título da issue:
 
 O corpo deve conter somente JSON válido conforme `examples/instagram-carousel.json`.
 
+O formato também aceita o campo opcional `category`, usado para escolher a identidade visual:
+
+- `prompt`: azul e ciano, com linguagem de comandos e interfaces.
+- `news`: vermelho e âmbar, com tratamento editorial de notícia.
+- `guide`: verde e dourado, com linguagem de percurso e passo a passo.
+- `curiosity`: roxo e ciano, com tratamento visual exploratório.
+- `business`: verde e dourado, voltado a marketing, vendas e negócios.
+
+Todos os layouts usam margens seguras, ajuste automático do título, indicação para deslizar, contador de páginas, ilustração contextual e CTA final destacado. Se `category` não for enviado, o renderizador infere a categoria pelo conteúdo.
+
 Arquivos principais:
 
 - `.github/workflows/publish-instagram-carousel.yml`
 - `scripts/render-carousel.mjs`
 - `scripts/publish-instagram.mjs`
 - `examples/instagram-carousel.json`
+- `examples/instagram-carousel-v2.json`: exemplo com categoria visual.
