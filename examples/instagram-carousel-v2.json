@@ -1,0 +1,26 @@
+{
+  "category": "guide",
+  "caption": "A legenda completa do carrossel, com CTA natural e até cinco hashtags relevantes.",
+  "slides": [
+    {
+      "type": "cover",
+      "eyebrow": "GUIA PRÁTICO",
+      "title": "O JEITO CERTO DE TRANSFORMAR UMA IDEIA EM PROMPT",
+      "body": "Um processo visual, direto e fácil de aplicar no seu próximo trabalho."
+    },
+    {
+      "type": "prompt",
+      "eyebrow": "COMECE AQUI",
+      "title": "DEFINA O RESULTADO",
+      "body": "Explique o que deve existir ao final e qual decisão a resposta precisa facilitar.",
+      "prompt": "Transforme meu pedido em um resultado verificável. Identifique a entrega, o público, a decisão que ela deve facilitar e os critérios de qualidade. Se faltar contexto essencial, faça até três perguntas antes de continuar. Pedido: [descreva aqui]"
+    },
+    {
+      "type": "cta",
+      "eyebrow": "PRÓXIMO PASSO",
+      "title": "USE A IA COM MAIS CLAREZA",
+      "body": "Salve este guia, compartilhe com quem precisa e siga o Mundo do Prompt.",
+      "cta": "SALVE E COMPARTILHE"
+    }
+  ]
+}
