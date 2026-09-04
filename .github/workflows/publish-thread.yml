@@ -35,6 +35,56 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
         run: node scripts/publish-thread.mjs
 
+      - name: Publicar o mesmo conteúdo no Telegram
+        id: telegram
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const token = process.env.TELEGRAM_BOT_TOKEN;
+          const chatId = process.env.TELEGRAM_CHANNEL_ID;
+          const output = process.env.GITHUB_OUTPUT;
+
+          if (!token || !chatId) {
+            if (output) fs.appendFileSync(output, "status=não configurado\\n");
+            console.log("Telegram ainda não configurado; publicação ignorada.");
+            process.exit(0);
+          }
+
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
+          const payload = JSON.parse(event.issue?.body || "{}");
+          if (!Array.isArray(payload.parts) || payload.parts.length < 1) throw new Error("O JSON não contém parts.");
+
+          const fullText = "🌐 MUNDO DO PROMPT\\n\\n" +
+            payload.parts.map(part => String(part).trim()).filter(Boolean).join("\\n\\n") +
+            "\\n\\n💾 Salve esta mensagem e compartilhe o canal.";
+
+          const chunks = [];
+          let remaining = fullText;
+          while (remaining.length > 4000) {
+            let cut = remaining.lastIndexOf("\\n\\n", 4000);
+            if (cut < 1000) cut = 4000;
+            chunks.push(remaining.slice(0, cut));
+            remaining = remaining.slice(cut).trimStart();
+          }
+          if (remaining) chunks.push(remaining);
+
+          for (const text of chunks) {
+            const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) throw new Error(data.description || `Telegram HTTP ${response.status}`);
+          }
+
+          if (output) fs.appendFileSync(output, `status=publicado (${chunks.length} mensagem(ns))\\n`);
+          NODE
+
       - name: Registrar sucesso
         if: success()
         uses: actions/github-script@v8
