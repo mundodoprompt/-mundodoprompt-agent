@@ -92,9 +92,30 @@ await waitForContainer(parent.id);
 const published = await request(`${userId}/media_publish`, { creation_id: parent.id });
 const media = await request(published.id, { fields: "permalink" }, "GET");
 
+let storyStatus = "não publicado";
+let storyId = "";
+try {
+  const storyUrl = `${base}carousels/${carouselId}/story.jpg`;
+  await waitForPublicImage(storyUrl);
+  const storyContainer = await request(`${userId}/media`, {
+    image_url: storyUrl,
+    media_type: "STORIES",
+  });
+  await waitForContainer(storyContainer.id);
+  const storyPublished = await request(`${userId}/media_publish`, { creation_id: storyContainer.id });
+  storyId = storyPublished.id || "";
+  storyStatus = "publicado";
+  console.log(`Story publicado: ${storyId}`);
+} catch (error) {
+  storyStatus = `falhou: ${error.message}`;
+  console.warn(`Carrossel publicado, mas o Story não foi enviado: ${error.message}`);
+}
+
 if (process.env.GITHUB_OUTPUT) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `post_id=${published.id}\n`);
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `permalink=${media.permalink || ""}\n`);
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `story_id=${storyId}\n`);
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `story_status=${storyStatus.replaceAll("\n", " ")}\n`);
 }
 
 console.log(`Carrossel publicado: ${media.permalink || published.id}`);
