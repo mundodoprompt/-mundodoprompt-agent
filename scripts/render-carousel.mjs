@@ -257,6 +257,34 @@ for (const [index, slide] of slides.entries()) {
   console.log(`Gerado: ${filename}`);
 }
 
+// Story 9:16 criado a partir da capa, com leitura segura e CTA para o feed.
+const coverPath = path.join(outputDir, "slide-01.jpg");
+const storyBackground = await sharp(coverPath)
+  .resize(1080, 1920, { fit: "cover" })
+  .blur(28)
+  .modulate({ brightness: 0.42, saturation: 0.85 })
+  .toBuffer();
+const storyCard = await sharp(coverPath)
+  .resize(900, 1125, { fit: "cover" })
+  .jpeg({ quality: 94, chromaSubsampling: "4:4:4" })
+  .toBuffer();
+const storyOverlay = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920">
+  <rect width="1080" height="1920" fill="none"/>
+  <rect x="90" y="250" width="900" height="1125" rx="34" fill="none" stroke="${theme.accent}" stroke-width="5"/>
+  <rect x="110" y="85" width="860" height="104" rx="52" fill="${theme.bg1}" fill-opacity=".92" stroke="${theme.accent}" stroke-width="2"/>
+  <text x="540" y="151" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="900" fill="#FFFFFF" letter-spacing="3">NOVO CARROSSEL NO FEED</text>
+  <path d="M540 1425v105m0 0-34-42m34 42 34-42" fill="none" stroke="${theme.accent}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="130" y="1580" width="820" height="168" rx="42" fill="${theme.accent}"/>
+  <text x="540" y="1650" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="900" fill="${theme.bg1}">VEJA O POST COMPLETO</text>
+  <text x="540" y="1707" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="${theme.bg1}">@mundodoprompt</text>
+  <text x="540" y="1835" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#FFFFFF" opacity=".86">SALVE PARA CONSULTAR DEPOIS</text>
+</svg>`);
+await sharp(storyBackground)
+  .composite([{ input: storyCard, left: 90, top: 250 }, { input: storyOverlay, left: 0, top: 0 }])
+  .jpeg({ quality: 94, chromaSubsampling: "4:4:4" })
+  .toFile(path.join(outputDir, "story.jpg"));
+console.log("Gerado: story.jpg");
+
 fs.writeFileSync("public/index.html", "<!doctype html><meta charset='utf-8'><title>Mundo do Prompt</title>");
 fs.writeFileSync(path.join(outputDir, "manifest.json"), JSON.stringify({ caption, count: slides.length, category, visualStyle, visualBrief: payload.visual_brief || "" }, null, 2));
 
