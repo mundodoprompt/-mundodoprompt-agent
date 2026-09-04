@@ -7,8 +7,6 @@ on:
 permissions:
   contents: read
   issues: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: threads-publisher
@@ -21,9 +19,6 @@ jobs:
       startsWith(github.event.issue.title, '[PUBLISH]')
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Baixar repositório
@@ -34,37 +29,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Instalar renderizador
-        run: npm install --no-save --no-package-lock sharp@0.34.4
-
-      - name: Gerar capa editorial
-        id: render
-        run: node scripts/render-thread-cover.mjs
-
-      - name: Guardar capa para diagnóstico
-        uses: actions/upload-artifact@v4
-        with:
-          name: capa-thread-${{ github.event.issue.number }}
-          path: public/thread-covers/${{ github.event.issue.number }}
-          retention-days: 7
-
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Preparar publicação da capa
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-
-      - name: Publicar capa temporária
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Publicar no Threads
+      - name: Publicar thread somente em texto
         id: publish
         env:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-          PAGES_BASE_URL: ${{ steps.deployment.outputs.page_url }}
         run: node scripts/publish-thread.mjs
 
       - name: Registrar sucesso
@@ -82,7 +50,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `✅ Thread publicada com sucesso.${link}`
+              body: `✅ Thread publicada com sucesso, somente em texto.${link}`
             });
             await github.rest.issues.update({
               owner: context.repo.owner,
