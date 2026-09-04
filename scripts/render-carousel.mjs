@@ -15,6 +15,8 @@ const caption = payload.caption;
 const slides = payload.slides;
 const categories = new Set(["prompt", "news", "guide", "curiosity", "business"]);
 const requestedCategory = String(payload.category || "").toLowerCase();
+const visualStyles = new Set(["cinematic", "editorial", "annotated", "newsroom", "prompt-card", "business"]);
+const requestedVisualStyle = String(payload.visual_style || "").toLowerCase();
 
 if (typeof caption !== "string" || !caption.trim() || [...caption].length > 2200) {
   throw new Error('"caption" deve ser um texto entre 1 e 2.200 caracteres.');
@@ -24,6 +26,9 @@ if (!Array.isArray(slides) || slides.length < 2 || slides.length > 10) {
 }
 if (requestedCategory && !categories.has(requestedCategory)) {
   throw new Error('"category" deve ser prompt, news, guide, curiosity ou business.');
+}
+if (requestedVisualStyle && !visualStyles.has(requestedVisualStyle)) {
+  throw new Error('"visual_style" inválido.');
 }
 
 const allowedTypes = new Set(["cover", "prompt", "content", "cta"]);
@@ -63,6 +68,7 @@ function inferCategory() {
 
 const category = inferCategory();
 const theme = themes[category];
+const visualStyle = requestedVisualStyle || ({news:"newsroom", guide:"annotated", curiosity:"editorial", business:"business", prompt:"prompt-card"}[category]);
 
 function charFactor(char) {
   if (char === " ") return 0.32;
@@ -135,21 +141,22 @@ function illustration(slide, x = 540, y = 870, scale = 1) {
   const kind = topicKind(slide);
   const a = theme.accent;
   const b = theme.accent2;
-  const common = `fill="none" stroke-linecap="round" stroke-linejoin="round"`;
-  const art = {
-    video: `<rect x="-190" y="-105" width="380" height="220" rx="28" fill="${theme.card}" stroke="${a}" stroke-width="6"/><path d="M-45-55 75 5-45 65z" fill="${b}"/><path d="M-160 145h320M-90 128v34M15 128v34M110 128v34" ${common} stroke="${a}" stroke-width="8"/>`,
-    money: `<path d="M-170-70h340v220h-340z" fill="${theme.card}" stroke="${a}" stroke-width="6"/><circle cx="0" cy="40" r="62" fill="none" stroke="${b}" stroke-width="9"/><path d="M18-5c-48-25-75 40-18 45 58 5 32 71-23 43M0-28v132" ${common} stroke="${b}" stroke-width="8"/><path d="M-145-35h60M85 115h60" ${common} stroke="${a}" stroke-width="7"/>`,
-    career: `<rect x="-165" y="-120" width="330" height="300" rx="26" fill="${theme.card}" stroke="${a}" stroke-width="6"/><circle cx="-85" cy="-35" r="35" fill="none" stroke="${b}" stroke-width="7"/><path d="M-135 35c18-38 82-38 100 0M15-52h108M15-5h108M-130 88h255M-130 132h180" ${common} stroke="${a}" stroke-width="7"/>`,
-    study: `<path d="M0-90c-55-40-125-42-180-20v230c58-20 122-16 180 22 58-38 122-42 180-22v-230c-55-22-125-20-180 20z" fill="${theme.card}" stroke="${a}" stroke-width="6"/><path d="M0-90v232M-145-55h95M-145-15h105M50-55h95M40-15h105" ${common} stroke="${b}" stroke-width="6"/>`,
-    travel: `<circle cx="0" cy="0" r="145" fill="${theme.card}" stroke="${a}" stroke-width="6"/><path d="M-145 0h290M0-145c75 78 75 212 0 290M0-145c-75 78-75 212 0 290M-115-85h230M-115 85h230" ${common} stroke="${a}" stroke-width="5"/><path d="m-28-10 125-55-60 120-15-46z" fill="${b}"/>`,
-    marketing: `<path d="M-180-25 40-105v225l-220-80z" fill="${theme.card}" stroke="${a}" stroke-width="7"/><path d="M40-50c62 18 62 97 0 115M-125 58l22 104h75L-55 85" ${common} stroke="${b}" stroke-width="9"/><circle cx="126" cy="-80" r="15" fill="${b}"/><circle cx="155" cy="5" r="12" fill="${a}"/>`,
-    decision: `<path d="M0-135v275M-130-90h260M-105-90-175 38h140zM105-90 35 38h140zM-90 150h180" ${common} stroke="${a}" stroke-width="8"/><circle cx="0" cy="-142" r="17" fill="${b}"/><path d="m-28 95 20 20 48-58" ${common} stroke="${b}" stroke-width="10"/>`,
-    news: `<rect x="-185" y="-115" width="370" height="260" rx="24" fill="${theme.card}" stroke="${a}" stroke-width="6"/><rect x="-145" y="-72" width="118" height="92" rx="12" fill="${b}"/><path d="M12-65h125M12-22h125M-145 62h282M-145 105h205" ${common} stroke="${a}" stroke-width="8"/>`,
-    prompt: `<rect x="-195" y="-115" width="390" height="260" rx="30" fill="${theme.card}" stroke="${a}" stroke-width="6"/><circle cx="-145" cy="-70" r="10" fill="${a}"/><circle cx="-112" cy="-70" r="10" fill="${b}"/><path d="M-145-20h150M-145 27h250M-145 74h195" ${common} stroke="${a}" stroke-width="9"/><path d="m118 68 68 28-43 15-18 42z" fill="${b}"/>`,
-  }[kind];
-  return `<g transform="translate(${x} ${y}) scale(${scale})">${art}</g>`;
+  const desk = `<path d="M-330 135h660v42h-660z" fill="#111827"/><path d="M-260 177h28v130h-28M232 177h28v130h-28" stroke="#111827" stroke-width="18"/>`;
+  const person = `<circle cx="-150" cy="-80" r="57" fill="#E9B89A"/><path d="M-205-33q55-34 110 0l30 190h-190z" fill="${b}"/><path d="M-195-100q40-68 91-15l12 34q-55-25-113 4z" fill="#161B2C"/><path d="M-105 20 5 86M-188 25-275 92" stroke="#E9B89A" stroke-width="30" stroke-linecap="round"/>`;
+  const laptop = `<path d="M-20-38h220v145H-20z" rx="12" fill="${theme.card}" stroke="${a}" stroke-width="7"/><path d="M-52 110h285l-28 35H-25z" fill="#DDE7F1"/><circle cx="90" cy="35" r="18" fill="${a}" opacity=".8"/>`;
+  const scenes = {
+    video: `${person}${desk}${laptop}<rect x="80" y="-130" width="250" height="155" rx="18" fill="#111827" stroke="${a}" stroke-width="7"/><path d="m170-93 82 41-82 42z" fill="${b}"/><path d="M72 62h245M112 48v28M190 48v28M270 48v28" stroke="${a}" stroke-width="8"/>`,
+    money: `${person}${desk}${laptop}<g transform="translate(220 -75) rotate(7)"><rect x="-72" y="-45" width="145" height="90" rx="12" fill="${b}"/><circle r="28" fill="none" stroke="#0B1628" stroke-width="7"/><path d="M-9-14c24-12 36 17 5 20-28 2-13 31 12 20" fill="none" stroke="#0B1628" stroke-width="6"/></g><path d="M170-120l35-45 35 34 42-72" fill="none" stroke="${a}" stroke-width="10"/>`,
+    career: `${person}${desk}${laptop}<rect x="180" y="-160" width="155" height="205" rx="16" fill="#F7FBFF"/><circle cx="230" cy="-105" r="26" fill="${b}"/><path d="M275-116h38M275-91h38M205-55h105M205-25h82" stroke="#17223A" stroke-width="8"/><path d="m225 5 18 18 46-55" fill="none" stroke="${a}" stroke-width="11"/>`,
+    study: `${person}${desk}${laptop}<path d="M145-155q85-38 170 0V65q-85-35-170 0z" fill="#FFF8E8" stroke="${a}" stroke-width="7"/><path d="M230-170V50M170-105h42M248-105h42M170-65h38M248-65h42" stroke="${b}" stroke-width="7"/><circle cx="282" cy="92" r="34" fill="${b}"/><path d="m270 92 10 10 20-27" fill="none" stroke="#111827" stroke-width="7"/>`,
+    travel: `${person}${desk}${laptop}<path d="M175-170h130v235H175z" rx="18" fill="#F7FBFF" stroke="${a}" stroke-width="7"/><path d="m195-105 90-42-42 92-15-34z" fill="${b}"/><path d="M196-20h88M196 10h63" stroke="#17223A" stroke-width="8"/><path d="M-300 95h80v92h-80z" fill="${b}"/><path d="M-280 95V65h40v30" fill="none" stroke="${a}" stroke-width="8"/>`,
+    marketing: `${person}${desk}${laptop}<path d="M170-135 300-180V10l-130-45z" fill="${b}" stroke="${a}" stroke-width="7"/><path d="M300-125q75 30 0 78M188 0l18 80h55l-23-65" fill="none" stroke="${a}" stroke-width="10"/><circle cx="328" cy="45" r="18" fill="${a}"/><circle cx="288" cy="83" r="12" fill="${b}"/>`,
+    decision: `${person}${desk}${laptop}<path d="M225-165v205M130-110h190M150-110 105-15h90zM300-110 255-15h90z" fill="none" stroke="${a}" stroke-width="9"/><path d="m185 72 25 25 58-70" fill="none" stroke="${b}" stroke-width="13"/>`,
+    news: `${person}${desk}${laptop}<rect x="145" y="-170" width="205" height="205" rx="18" fill="#F7FBFF" transform="rotate(5 247 -67)"/><rect x="170" y="-135" width="75" height="58" fill="${b}"/><path d="M260-125h65M260-95h65M170-50h155M170-18h110" stroke="#17223A" stroke-width="8"/><rect x="128" y="-205" width="122" height="38" rx="19" fill="${a}"/><text x="189" y="-179" text-anchor="middle" font-family="Arial" font-size="20" font-weight="900" fill="#07111F">AGORA</text>`,
+    prompt: `${person}${desk}${laptop}<rect x="145" y="-160" width="210" height="190" rx="22" fill="#F7FBFF" stroke="${a}" stroke-width="7"/><path d="M178-112h115M178-72h145M178-32h105" stroke="#17223A" stroke-width="9" stroke-linecap="round"/><path d="m288-5 70 28-45 14-18 42z" fill="${b}"/>`
+  };
+  return `<g transform="translate(${x} ${y}) scale(${scale})">${scenes[kind] || scenes.prompt}</g>`;
 }
-
 function background(index) {
   const pattern = category === "news"
     ? `<path d="M0 1090 1080 780V1350H0z" fill="${theme.accent}" opacity=".05"/>`
@@ -190,34 +197,59 @@ function promptCard(slide, startY) {
 function baseSvg(slide, index) {
   const isCover = slide.type === "cover";
   const isCta = slide.type === "cta";
-  const titleFit = fitText(slide.title.toUpperCase(), 930, isCover ? 72 : 56, isCover ? 48 : 40, isCover ? 4 : 3);
-  const titleY = isCover ? 278 : 258;
-  const titleBottom = titleY + (titleFit.lines.length - 1) * titleFit.lineHeight + titleFit.size;
-  const bodyFit = slide.body ? fitText(slide.body, isCta ? 820 : 900, isCover ? 34 : 33, 27, isCover ? 5 : 6) : { lines: [], size: 32, lineHeight: 46 };
-  const bodyY = titleBottom + (isCover ? 62 : 52);
-  const bodyBottom = bodyY + Math.max(0, bodyFit.lines.length - 1) * bodyFit.lineHeight + bodyFit.size;
   const eyebrow = escapeXml(slide.eyebrow || (isCover ? theme.label : isCta ? "PRÓXIMO PASSO" : "APLIQUE AGORA"));
-  let content = `${brandMark()}
-    <rect x="66" y="160" width="${Math.min(520, 34 + estimatedWidth(eyebrow, 22, 2.3))}" height="48" rx="24" fill="${theme.card}" stroke="${theme.accent}" stroke-opacity=".7"/>
-    <text x="90" y="191" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="${theme.accent}" letter-spacing="2.3">${eyebrow}</text>
-    ${textBlock(titleFit.lines, 66, titleY, titleFit.size, titleFit.lineHeight, 900)}
-    ${bodyFit.lines.length ? textBlock(bodyFit.lines, isCta ? 540 : 70, bodyY, bodyFit.size, bodyFit.lineHeight, 400, theme.soft, isCta ? "middle" : "start") : ""}`;
 
-  if (slide.prompt) {
-    content += promptCard(slide, bodyBottom + 58);
-  } else if (isCta) {
-    content += `${illustration(slide, 540, 790, .72)}
-      <rect x="126" y="1010" width="828" height="128" rx="36" fill="${theme.accent}"/>
-      <text x="540" y="1064" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="900" fill="${theme.bg1}">${escapeXml(slide.cta || "SALVE E COMPARTILHE")}</text>
-      <text x="540" y="1105" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="${theme.bg1}">@mundodoprompt</text>`;
-  } else {
-    const artY = Math.max(800, bodyBottom + 235);
-    content += illustration(slide, 540, Math.min(940, artY), isCover ? .92 : .78);
+  if (isCover) {
+    const titleFit = fitText(slide.title.toUpperCase(), 900, 88, 56, 4);
+    const titleY = 270;
+    const lineBg = titleFit.lines.map((line, i) => {
+      const w = Math.min(930, estimatedWidth(line, titleFit.size) + 38);
+      const y = titleY - titleFit.size + i * titleFit.lineHeight - 9;
+      return i === 1 || (titleFit.lines.length === 1 && i === 0)
+        ? `<rect x="55" y="${y}" width="${w}" height="${titleFit.size + 22}" rx="8" fill="${theme.accent}" opacity=".95"/>`
+        : "";
+    }).join("");
+    const titleText = titleFit.lines.map((line, i) => {
+      const fill = i === 1 || (titleFit.lines.length === 1 && i === 0) ? theme.bg1 : "#FFFFFF";
+      return `<text x="70" y="${titleY + i * titleFit.lineHeight}" font-family="Arial Narrow, Arial, sans-serif" font-size="${titleFit.size}" font-weight="900" fill="${fill}" letter-spacing="-1.5">${escapeXml(line)}</text>`;
+    }).join("");
+    const support = slide.body ? fitText(slide.body, 820, 31, 25, 2) : {lines:[]};
+    return `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">${background(index)}
+      ${brandMark()}
+      <rect x="66" y="142" width="${Math.min(500, 38 + estimatedWidth(eyebrow, 21, 2))}" height="44" rx="8" fill="${theme.accent2}"/>
+      <text x="86" y="171" font-family="Arial" font-size="21" font-weight="900" fill="#07111F" letter-spacing="2">${eyebrow}</text>
+      ${lineBg}${titleText}
+      ${support.lines.length ? textBlock(support.lines, 70, titleY + titleFit.lines.length * titleFit.lineHeight + 34, support.size, support.lineHeight, 700, theme.soft) : ""}
+      <path d="M705 598c165-55 292 75 250 230-45 165-240 260-430 174-135-62-94-301 180-404z" fill="${theme.accent}" opacity=".10"/>
+      ${illustration(slide, 565, 920, 1.12)}
+      <text x="70" y="1215" font-family="Arial" font-size="22" font-weight="800" fill="${theme.soft}">DESLIZE PARA VER  →</text>
+      ${footer(index)}
+    </svg>`;
   }
 
+  const titleFit = fitText(slide.title.toUpperCase(), 930, 60, 42, 3);
+  const titleY = 265;
+  const titleBottom = titleY + (titleFit.lines.length - 1) * titleFit.lineHeight + titleFit.size;
+  const bodyFit = slide.body ? fitText(slide.body, isCta ? 820 : 900, 35, 28, 6) : { lines: [], size: 32, lineHeight: 46 };
+  const bodyY = titleBottom + 48;
+  const bodyBottom = bodyY + Math.max(0, bodyFit.lines.length - 1) * bodyFit.lineHeight + bodyFit.size;
+  let content = `${brandMark()}
+    <text x="68" y="178" font-family="Arial" font-size="22" font-weight="900" fill="${theme.accent}" letter-spacing="2.1">${eyebrow}</text>
+    ${textBlock(titleFit.lines, 66, titleY, titleFit.size, titleFit.lineHeight, 900)}
+    ${bodyFit.lines.length ? textBlock(bodyFit.lines, isCta ? 540 : 70, bodyY, bodyFit.size, bodyFit.lineHeight, 500, theme.soft, isCta ? "middle" : "start") : ""}`;
+
+  if (slide.prompt) {
+    content += promptCard(slide, Math.max(520, bodyBottom + 48));
+  } else if (isCta) {
+    content += `${illustration(slide, 540, 790, .78)}
+      <rect x="100" y="1000" width="880" height="142" rx="28" fill="${theme.accent}"/>
+      <text x="540" y="1060" text-anchor="middle" font-family="Arial" font-size="31" font-weight="900" fill="${theme.bg1}">${escapeXml(slide.cta || "SALVE • COMPARTILHE • SIGA")}</text>
+      <text x="540" y="1107" text-anchor="middle" font-family="Arial" font-size="25" font-weight="800" fill="${theme.bg1}">@mundodoprompt</text>`;
+  } else {
+    content += illustration(slide, 540, Math.min(930, Math.max(770, bodyBottom + 240)), .88);
+  }
   return `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">${background(index)}${content}${footer(index)}</svg>`;
 }
-
 for (const [index, slide] of slides.entries()) {
   const svg = baseSvg(slide, index);
   const filename = `slide-${String(index + 1).padStart(2, "0")}.jpg`;
@@ -226,7 +258,7 @@ for (const [index, slide] of slides.entries()) {
 }
 
 fs.writeFileSync("public/index.html", "<!doctype html><meta charset='utf-8'><title>Mundo do Prompt</title>");
-fs.writeFileSync(path.join(outputDir, "manifest.json"), JSON.stringify({ caption, count: slides.length, category }, null, 2));
+fs.writeFileSync(path.join(outputDir, "manifest.json"), JSON.stringify({ caption, count: slides.length, category, visualStyle, visualBrief: payload.visual_brief || "" }, null, 2));
 
 if (process.env.GITHUB_OUTPUT) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `carousel_id=${carouselId}\n`);
