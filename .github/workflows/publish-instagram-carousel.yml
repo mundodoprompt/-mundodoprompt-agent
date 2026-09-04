@@ -74,14 +74,18 @@ jobs:
         env:
           PERMALINK: ${{ steps.instagram.outputs.permalink }}
           POST_ID: ${{ steps.instagram.outputs.post_id }}
+          STORY_STATUS: ${{ steps.instagram.outputs.story_status }}
         with:
           script: |
             const destination = process.env.PERMALINK || `ID: ${process.env.POST_ID}`;
+            const story = process.env.STORY_STATUS === "publicado"
+              ? "✅ Story de divulgação publicado automaticamente."
+              : `⚠️ Carrossel publicado, mas o Story não foi concluído: ${process.env.STORY_STATUS || "status indisponível"}`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `✅ Carrossel publicado integralmente no Instagram.\n\n${destination}`
+              body: `✅ Carrossel publicado integralmente no Instagram.\n\n${destination}\n\n${story}`
             });
             await github.rest.issues.update({
               owner: context.repo.owner,
